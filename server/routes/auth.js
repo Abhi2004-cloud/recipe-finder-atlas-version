@@ -10,8 +10,13 @@ router.post('/register', async (req, res) => {
     try {
         const { username, email, password } = req.body;
 
+        // Validate input
+        if (!username || !email || !password) {
+            return res.status(400).json({ message: 'Please provide all required fields' });
+        }
+
         // Check if user exists
-        const existingUser = await User.findOne({ email });
+        const existingUser = await User.findOne({ $or: [{ email }, { username }] });
         if (existingUser) {
             return res.status(400).json({ message: 'User already exists' });
         }
@@ -46,7 +51,10 @@ router.post('/register', async (req, res) => {
         });
     } catch (error) {
         console.error('Registration error:', error);
-        res.status(500).json({ message: 'Server error' });
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({ message: error.message });
+        }
+        res.status(500).json({ message: 'Server error during registration' });
     }
 });
 
@@ -97,6 +105,9 @@ router.post('/login', async (req, res) => {
 router.get('/me', auth, async (req, res) => {
     try {
         const user = await User.findById(req.user.id).select('-password');
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
         res.json(user);
     } catch (error) {
         console.error('Get user error:', error);

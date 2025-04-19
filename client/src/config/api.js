@@ -11,10 +11,11 @@ export const config = {
     authHeaders: (token) => ({
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'x-auth-token': token
+        'x-auth-token': token,
+        'Authorization': `Bearer ${token}`
     }),
     fetchOptions: {
-        credentials: 'same-origin',
+        credentials: 'include',
         mode: 'cors'
     }
 }; 
