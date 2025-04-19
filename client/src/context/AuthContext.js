@@ -20,12 +20,15 @@ export const AuthProvider = ({ children }) => {
     const fetchUserData = async (token) => {
         try {
             const response = await fetch(`${config.API_URL}/api/auth/me`, {
-                ...config.fetchOptions,
-                headers: config.authHeaders(token)
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
             });
             
             if (!response.ok) {
-                throw new Error('Failed to fetch user data');
+                throw new Error('Session expired. Please login again.');
             }
             
             const data = await response.json();
@@ -35,6 +38,7 @@ export const AuthProvider = ({ children }) => {
             console.error('Error fetching user data:', err);
             setError(err.message);
             localStorage.removeItem('token');
+            setUser(null);
         } finally {
             setLoading(false);
         }
@@ -43,20 +47,22 @@ export const AuthProvider = ({ children }) => {
     const register = async (userData) => {
         try {
             const response = await fetch(`${config.API_URL}/api/auth/register`, {
-                ...config.fetchOptions,
                 method: 'POST',
-                headers: config.headers,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify(userData)
             });
 
+            const data = await response.json();
+
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Registration failed');
+                throw new Error(data.message || 'Registration failed');
             }
 
-            const data = await response.json();
             localStorage.setItem('token', data.token);
-            await fetchUserData(data.token);
+            setUser(data.user);
+            setError(null);
             return data;
         } catch (err) {
             console.error('Registration error:', err);
@@ -68,20 +74,22 @@ export const AuthProvider = ({ children }) => {
     const login = async (credentials) => {
         try {
             const response = await fetch(`${config.API_URL}/api/auth/login`, {
-                ...config.fetchOptions,
                 method: 'POST',
-                headers: config.headers,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify(credentials)
             });
 
+            const data = await response.json();
+
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Login failed');
+                throw new Error(data.message || 'Login failed');
             }
 
-            const data = await response.json();
             localStorage.setItem('token', data.token);
-            await fetchUserData(data.token);
+            setUser(data.user);
+            setError(null);
             return data;
         } catch (err) {
             console.error('Login error:', err);

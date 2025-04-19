@@ -1,5 +1,5 @@
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-const UPLOADS_URL = process.env.REACT_APP_UPLOADS_URL || 'http://localhost:5000/uploads';
+const API_URL = process.env.REACT_APP_API_URL || 'https://recipe-finder-atlas-version-backend.onrender.com';
+const UPLOADS_URL = `${API_URL}/uploads`;
 
 export const config = {
     API_URL,
@@ -14,7 +14,7 @@ export const config = {
         'Authorization': `Bearer ${token}`
     }),
     fetchOptions: {
-        credentials: 'include',
+        credentials: 'same-origin',
         mode: 'cors'
     }
 }; 
