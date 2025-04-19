@@ -30,9 +30,28 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // MongoDB Connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/recipe-finder';
-mongoose.connect(MONGODB_URI)
-    .then(() => console.log('Connected to MongoDB'))
-    .catch(err => console.error('MongoDB connection error:', err));
+mongoose.connect(MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
+    maxPoolSize: 10
+})
+    .then(() => console.log('Connected to MongoDB Atlas'))
+    .catch(err => {
+        console.error('MongoDB connection error:', err);
+        // Attempt to reconnect after 5 seconds
+        setTimeout(() => {
+            console.log('Attempting to reconnect to MongoDB...');
+            mongoose.connect(MONGODB_URI, {
+                useNewUrlParser: true,
+                useUnifiedTopology: true,
+                serverSelectionTimeoutMS: 5000,
+                socketTimeoutMS: 45000,
+                maxPoolSize: 10
+            });
+        }, 5000);
+    });
 
 // Routes
 app.use('/api/recipes', require('./routes/recipes'));

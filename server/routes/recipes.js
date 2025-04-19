@@ -7,9 +7,12 @@ const multer = require('../config/multer');
 // Get all recipes
 router.get('/', async (req, res) => {
     try {
+        console.log('Fetching all recipes...');
         const recipes = await Recipe.find()
             .populate('createdBy', 'username')
             .sort({ createdAt: -1 });
+        
+        console.log('Found recipes:', recipes.length);
         res.json(recipes);
     } catch (err) {
         console.error('Error fetching recipes:', err);
