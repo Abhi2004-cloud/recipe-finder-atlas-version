@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
             const response = await fetch(`${config.API_URL}/api/auth/me`, {
                 method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${token}`,
+                    'x-auth-token': token,
                     'Content-Type': 'application/json'
                 }
             });

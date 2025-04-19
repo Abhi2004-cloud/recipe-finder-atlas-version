@@ -11,7 +11,7 @@ export const config = {
     authHeaders: (token) => ({
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'x-auth-token': token
     }),
     fetchOptions: {
         credentials: 'same-origin',
