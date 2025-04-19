@@ -17,6 +17,7 @@ import {
 import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import API_BASE_URL from '../config';
 
 const RecipeDetail = () => {
   const { id } = useParams();
@@ -156,7 +157,7 @@ const RecipeDetail = () => {
           <Paper sx={{ p: 3, mb: 4 }}>
             <Box
               component="img"
-              src={`${process.env.REACT_APP_API_URL}/uploads/${recipe.image}`}
+              src={`${API_BASE_URL}/uploads/${recipe.image}`}
               alt={recipe.title}
               sx={{
                 width: '100%',

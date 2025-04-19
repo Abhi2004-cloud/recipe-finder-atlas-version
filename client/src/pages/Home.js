@@ -11,6 +11,7 @@ import {
   Box,
 } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
+import API_BASE_URL from '../config';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -84,7 +85,7 @@ const Home = () => {
                 <CardMedia
                   component="img"
                   height="200"
-                  image={`${process.env.REACT_APP_API_URL}/uploads/${recipe.image}`}
+                  image={`${API_BASE_URL}/uploads/${recipe.image}`}
                   alt={recipe.title}
                 />
                 <CardContent sx={{ flexGrow: 1 }}>
