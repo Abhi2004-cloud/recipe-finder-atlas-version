@@ -42,13 +42,23 @@ router.post('/register', async (req, res) => {
             process.env.JWT_SECRET,
             { expiresIn: '1h' },
             (err, token) => {
-                if (err) throw err;
-                res.json({ token, user: { id: user.id, username: user.username, email: user.email } });
+                if (err) {
+                    console.error('JWT Error:', err);
+                    return res.status(500).json({ message: 'Error generating token' });
+                }
+                res.status(201).json({
+                    token,
+                    user: {
+                        id: user.id,
+                        username: user.username,
+                        email: user.email
+                    }
+                });
             }
         );
     } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ message: 'Server error' });
+        console.error('Registration Error:', err);
+        res.status(500).json({ message: 'Server error during registration' });
     }
 });
 
@@ -58,7 +68,7 @@ router.post('/login', async (req, res) => {
         const { email, password } = req.body;
 
         // Check if user exists
-        let user = await User.findOne({ email });
+        const user = await User.findOne({ email });
         if (!user) {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
@@ -81,13 +91,23 @@ router.post('/login', async (req, res) => {
             process.env.JWT_SECRET,
             { expiresIn: '1h' },
             (err, token) => {
-                if (err) throw err;
-                res.json({ token, user: { id: user.id, username: user.username, email: user.email } });
+                if (err) {
+                    console.error('JWT Error:', err);
+                    return res.status(500).json({ message: 'Error generating token' });
+                }
+                res.json({
+                    token,
+                    user: {
+                        id: user.id,
+                        username: user.username,
+                        email: user.email
+                    }
+                });
             }
         );
     } catch (err) {
-        console.error(err.message);
-        res.status(500).json({ message: 'Server error' });
+        console.error('Login Error:', err);
+        res.status(500).json({ message: 'Server error during login' });
     }
 });
 
