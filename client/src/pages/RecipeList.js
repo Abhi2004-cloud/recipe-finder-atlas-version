@@ -16,7 +16,8 @@ const RecipeList = () => {
             });
 
             if (!response.ok) {
-                throw new Error(`Failed to fetch recipes: ${response.status}`);
+                const errorData = await response.json();
+                throw new Error(errorData.message || `Failed to fetch recipes: ${response.status}`);
             }
 
             const data = await response.json();
@@ -25,7 +26,7 @@ const RecipeList = () => {
             setError(null);
         } catch (err) {
             console.error('Error fetching recipes:', err);
-            setError(err.message);
+            setError(err.message || 'Failed to fetch recipes. Please try again later.');
         } finally {
             setLoading(false);
         }
@@ -35,8 +36,8 @@ const RecipeList = () => {
         fetchRecipes();
     }, []);
 
-    if (loading) return <div>Loading...</div>;
-    if (error) return <div>Error: {error}</div>;
+    if (loading) return <div>Loading recipes...</div>;
+    if (error) return <div className="error-message">Error: {error}</div>;
 
     return (
         <div className="recipe-list">
