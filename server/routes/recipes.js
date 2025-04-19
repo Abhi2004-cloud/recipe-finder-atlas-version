@@ -3,16 +3,15 @@ const router = express.Router();
 const Recipe = require('../models/Recipe');
 const auth = require('../middleware/auth');
 const multer = require('../config/multer');
+const fs = require('fs');
+const path = require('path');
 
 // Get all recipes
 router.get('/', async (req, res) => {
     try {
-        console.log('Fetching all recipes...');
         const recipes = await Recipe.find()
             .populate('createdBy', 'username')
             .sort({ createdAt: -1 });
-        
-        console.log('Found recipes:', recipes.length);
         res.json(recipes);
     } catch (err) {
         console.error('Error fetching recipes:', err);
@@ -41,12 +40,6 @@ router.get('/:id', async (req, res) => {
 // Create recipe
 router.post('/', [auth, multer.single('image')], async (req, res) => {
     try {
-        console.log('Received recipe data:', {
-            body: req.body,
-            file: req.file,
-            user: req.user
-        });
-
         const { title, description, cuisine, prepTime, cookTime, servings, ingredients, instructions } = req.body;
 
         // Validate required fields
@@ -54,9 +47,27 @@ router.post('/', [auth, multer.single('image')], async (req, res) => {
             return res.status(400).json({ message: 'Please provide all required fields' });
         }
 
-        // Parse ingredients and instructions if they are strings
-        const parsedIngredients = typeof ingredients === 'string' ? JSON.parse(ingredients) : ingredients;
-        const parsedInstructions = typeof instructions === 'string' ? JSON.parse(instructions) : instructions;
+        // Parse and validate ingredients
+        let parsedIngredients;
+        try {
+            parsedIngredients = typeof ingredients === 'string' ? JSON.parse(ingredients) : ingredients;
+            if (!Array.isArray(parsedIngredients) || parsedIngredients.length === 0) {
+                return res.status(400).json({ message: 'Ingredients must be a non-empty array' });
+            }
+        } catch (err) {
+            return res.status(400).json({ message: 'Invalid ingredients format' });
+        }
+
+        // Parse and validate instructions
+        let parsedInstructions;
+        try {
+            parsedInstructions = typeof instructions === 'string' ? JSON.parse(instructions) : instructions;
+            if (!Array.isArray(parsedInstructions) || parsedInstructions.length === 0) {
+                return res.status(400).json({ message: 'Instructions must be a non-empty array' });
+            }
+        } catch (err) {
+            return res.status(400).json({ message: 'Invalid instructions format' });
+        }
 
         // Create new recipe
         const newRecipe = new Recipe({
@@ -73,7 +84,6 @@ router.post('/', [auth, multer.single('image')], async (req, res) => {
         });
 
         const recipe = await newRecipe.save();
-        console.log('Recipe created successfully:', recipe);
         res.status(201).json(recipe);
     } catch (err) {
         console.error('Error creating recipe:', err);
@@ -100,9 +110,39 @@ router.put('/:id', [auth, multer.single('image')], async (req, res) => {
             return res.status(401).json({ message: 'User not authorized' });
         }
 
-        // Parse ingredients and instructions if they are strings
-        const parsedIngredients = ingredients ? (typeof ingredients === 'string' ? JSON.parse(ingredients) : ingredients) : recipe.ingredients;
-        const parsedInstructions = instructions ? (typeof instructions === 'string' ? JSON.parse(instructions) : instructions) : recipe.instructions;
+        // Parse and validate ingredients if provided
+        let parsedIngredients = recipe.ingredients;
+        if (ingredients) {
+            try {
+                parsedIngredients = typeof ingredients === 'string' ? JSON.parse(ingredients) : ingredients;
+                if (!Array.isArray(parsedIngredients) || parsedIngredients.length === 0) {
+                    return res.status(400).json({ message: 'Ingredients must be a non-empty array' });
+                }
+            } catch (err) {
+                return res.status(400).json({ message: 'Invalid ingredients format' });
+            }
+        }
+
+        // Parse and validate instructions if provided
+        let parsedInstructions = recipe.instructions;
+        if (instructions) {
+            try {
+                parsedInstructions = typeof instructions === 'string' ? JSON.parse(instructions) : instructions;
+                if (!Array.isArray(parsedInstructions) || parsedInstructions.length === 0) {
+                    return res.status(400).json({ message: 'Instructions must be a non-empty array' });
+                }
+            } catch (err) {
+                return res.status(400).json({ message: 'Invalid instructions format' });
+            }
+        }
+
+        // If new image is uploaded, delete old image if it's not the default
+        if (req.file && recipe.image !== 'default.jpg') {
+            const oldImagePath = path.join('uploads', recipe.image);
+            if (fs.existsSync(oldImagePath)) {
+                fs.unlinkSync(oldImagePath);
+            }
+        }
 
         // Update recipe
         recipe.title = title || recipe.title;
@@ -140,6 +180,14 @@ router.delete('/:id', auth, async (req, res) => {
         // Check if user owns recipe
         if (recipe.createdBy.toString() !== req.user._id.toString()) {
             return res.status(401).json({ message: 'User not authorized' });
+        }
+
+        // Delete image file if it's not the default
+        if (recipe.image !== 'default.jpg') {
+            const imagePath = path.join('uploads', recipe.image);
+            if (fs.existsSync(imagePath)) {
+                fs.unlinkSync(imagePath);
+            }
         }
 
         await recipe.deleteOne();
