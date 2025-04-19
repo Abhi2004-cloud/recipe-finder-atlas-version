@@ -1,21 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Recipe = require('../models/Recipe');
-const multer = require('multer');
-const path = require('path');
 const auth = require('../middleware/auth');
-
-// Configure multer for image uploads
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/')
-    },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + path.extname(file.originalname))
-    }
-});
-
-const upload = multer({ storage: storage });
 
 // Get all recipes
 router.get('/', async (req, res) => {
@@ -41,11 +27,10 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create new recipe
-router.post('/', auth, upload.single('image'), async (req, res) => {
+router.post('/', auth, async (req, res) => {
     try {
         console.log('Received recipe data:', {
             body: req.body,
-            file: req.file,
             user: req.user
         });
 
@@ -121,7 +106,7 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
             servings: servings,
             ingredients: ingredients,
             instructions: instructions,
-            image: req.file ? req.file.filename : 'default.jpg',
+            image: 'default.jpg', // Default image since we can't upload files
             createdBy: req.user._id
         });
 
@@ -138,7 +123,7 @@ router.post('/', auth, upload.single('image'), async (req, res) => {
 });
 
 // Update recipe
-router.put('/:id', auth, upload.single('image'), async (req, res) => {
+router.put('/:id', auth, async (req, res) => {
     try {
         const recipe = await Recipe.findById(req.params.id);
         if (!recipe) {
@@ -184,14 +169,9 @@ router.put('/:id', auth, upload.single('image'), async (req, res) => {
         recipe.ingredients = ingredients;
         recipe.instructions = instructions;
 
-        if (req.file) {
-            recipe.image = req.file.filename;
-        }
-
         const updatedRecipe = await recipe.save();
         res.json(updatedRecipe);
     } catch (error) {
-        console.error('Error updating recipe:', error);
         res.status(400).json({ message: error.message });
     }
 });
