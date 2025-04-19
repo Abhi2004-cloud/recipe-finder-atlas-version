@@ -85,7 +85,7 @@ const Home = () => {
                 <CardMedia
                   component="img"
                   height="200"
-                  image={`${API_BASE_URL}/uploads/${recipe.image}`}
+                  image={`${API_BASE_URL.replace('/api', '')}/uploads/${recipe.image}`}
                   alt={recipe.title}
                 />
                 <CardContent sx={{ flexGrow: 1 }}>

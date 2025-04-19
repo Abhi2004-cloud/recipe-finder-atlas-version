@@ -157,7 +157,7 @@ const RecipeDetail = () => {
           <Paper sx={{ p: 3, mb: 4 }}>
             <Box
               component="img"
-              src={`${API_BASE_URL}/uploads/${recipe.image}`}
+              src={`${API_BASE_URL.replace('/api', '')}/uploads/${recipe.image}`}
               alt={recipe.title}
               sx={{
                 width: '100%',

@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import { Search as SearchIcon } from '@mui/icons-material';
 import axios from 'axios';
+import API_BASE_URL from '../config';
 
 const RecipeList = () => {
   const [recipes, setRecipes] = useState([]);
@@ -112,7 +113,7 @@ const RecipeList = () => {
                   <CardMedia
                     component="img"
                     height="200"
-                    image={`${process.env.REACT_APP_API_URL}/uploads/${recipe.image}`}
+                    image={`${API_BASE_URL.replace('/api', '')}/uploads/${recipe.image}`}
                     alt={recipe.title}
                   />
                   <CardContent sx={{ flexGrow: 1 }}>
