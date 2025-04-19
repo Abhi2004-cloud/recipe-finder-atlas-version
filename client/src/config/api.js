@@ -6,9 +6,15 @@ export const config = {
     UPLOADS_URL,
     headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json'
     },
     authHeaders: (token) => ({
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
         'Authorization': `Bearer ${token}`
-    })
+    }),
+    fetchOptions: {
+        credentials: 'include',
+        mode: 'cors'
+    }
 }; 

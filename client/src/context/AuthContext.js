@@ -1,89 +1,104 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import axios from 'axios';
-import API_BASE_URL from '../config';
+import React, { createContext, useState, useEffect } from 'react';
+import { config } from '../config/api';
 
-const AuthContext = createContext();
-
-export const useAuth = () => useContext(AuthContext);
+export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      // Fetch user data
-      axios.get(`${API_BASE_URL}/auth/me`)
-        .then(response => {
-          setUser(response.data);
-        })
-        .catch(error => {
-          console.error('Error fetching user data:', error);
-          localStorage.removeItem('token');
-          delete axios.defaults.headers.common['Authorization'];
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    } else {
-      setLoading(false);
-    }
-  }, []);
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            fetchUserData(token);
+        } else {
+            setLoading(false);
+        }
+    }, []);
 
-  const login = async (email, password) => {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/auth/login`, {
-        email,
-        password
-      });
-      const { token, user } = response.data;
-      localStorage.setItem('token', token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      setUser(user);
-      return { success: true };
-    } catch (error) {
-      console.error('Login error:', error);
-      return { success: false, error: error.response?.data?.message || 'Login failed' };
-    }
-  };
+    const fetchUserData = async (token) => {
+        try {
+            const response = await fetch(`${config.API_URL}/api/auth/me`, {
+                ...config.fetchOptions,
+                headers: config.authHeaders(token)
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch user data');
+            }
+            
+            const data = await response.json();
+            setUser(data);
+            setError(null);
+        } catch (err) {
+            console.error('Error fetching user data:', err);
+            setError(err.message);
+            localStorage.removeItem('token');
+        } finally {
+            setLoading(false);
+        }
+    };
 
-  const register = async (username, email, password) => {
-    try {
-      const response = await axios.post(`${API_BASE_URL}/auth/register`, {
-        username,
-        email,
-        password
-      });
-      const { token, user } = response.data;
-      localStorage.setItem('token', token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      setUser(user);
-      return { success: true };
-    } catch (error) {
-      console.error('Registration error:', error);
-      return { success: false, error: error.response?.data?.message || 'Registration failed' };
-    }
-  };
+    const register = async (userData) => {
+        try {
+            const response = await fetch(`${config.API_URL}/api/auth/register`, {
+                ...config.fetchOptions,
+                method: 'POST',
+                headers: config.headers,
+                body: JSON.stringify(userData)
+            });
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    delete axios.defaults.headers.common['Authorization'];
-    setUser(null);
-  };
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Registration failed');
+            }
 
-  const value = {
-    user,
-    loading,
-    login,
-    register,
-    logout
-  };
+            const data = await response.json();
+            localStorage.setItem('token', data.token);
+            await fetchUserData(data.token);
+            return data;
+        } catch (err) {
+            console.error('Registration error:', err);
+            setError(err.message);
+            throw err;
+        }
+    };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
-    </AuthContext.Provider>
-  );
+    const login = async (credentials) => {
+        try {
+            const response = await fetch(`${config.API_URL}/api/auth/login`, {
+                ...config.fetchOptions,
+                method: 'POST',
+                headers: config.headers,
+                body: JSON.stringify(credentials)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Login failed');
+            }
+
+            const data = await response.json();
+            localStorage.setItem('token', data.token);
+            await fetchUserData(data.token);
+            return data;
+        } catch (err) {
+            console.error('Login error:', err);
+            setError(err.message);
+            throw err;
+        }
+    };
+
+    const logout = () => {
+        localStorage.removeItem('token');
+        setUser(null);
+        setError(null);
+    };
+
+    return (
+        <AuthContext.Provider value={{ user, loading, error, register, login, logout }}>
+            {children}
+        </AuthContext.Provider>
+    );
 }; 
