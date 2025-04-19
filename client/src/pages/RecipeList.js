@@ -31,7 +31,7 @@ const RecipeList = () => {
 
   const fetchRecipes = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/recipes');
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/recipes`);
       setRecipes(response.data);
       setLoading(false);
     } catch (error) {
@@ -112,7 +112,7 @@ const RecipeList = () => {
                   <CardMedia
                     component="img"
                     height="200"
-                    image={`http://localhost:5000/uploads/${recipe.image}`}
+                    image={`${process.env.REACT_APP_API_URL}/uploads/${recipe.image}`}
                     alt={recipe.title}
                   />
                   <CardContent sx={{ flexGrow: 1 }}>

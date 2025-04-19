@@ -32,7 +32,7 @@ const RecipeDetail = () => {
 
   const fetchRecipe = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/recipes/${id}`);
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/recipes/${id}`);
       setRecipe(response.data);
       setLoading(false);
     } catch (error) {
@@ -44,7 +44,7 @@ const RecipeDetail = () => {
   const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this recipe?')) {
       try {
-        await axios.delete(`http://localhost:5000/api/recipes/${id}`);
+        await axios.delete(`${process.env.REACT_APP_API_URL}/api/recipes/${id}`);
         navigate('/recipes');
       } catch (error) {
         setError('Error deleting recipe');
@@ -156,7 +156,7 @@ const RecipeDetail = () => {
           <Paper sx={{ p: 3, mb: 4 }}>
             <Box
               component="img"
-              src={`http://localhost:5000/uploads/${recipe.image}`}
+              src={`${process.env.REACT_APP_API_URL}/uploads/${recipe.image}`}
               alt={recipe.title}
               sx={{
                 width: '100%',

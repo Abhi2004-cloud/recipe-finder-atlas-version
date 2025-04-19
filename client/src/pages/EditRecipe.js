@@ -48,7 +48,7 @@ const EditRecipe = () => {
 
   const fetchRecipe = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/recipes/${id}`);
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/recipes/${id}`);
       const recipeData = response.data;
       setRecipe(recipeData);
       
@@ -187,7 +187,7 @@ const EditRecipe = () => {
         return;
       }
 
-      const response = await axios.put(`http://localhost:5000/api/recipes/${id}`, formDataToSend, {
+      const response = await axios.put(`${process.env.REACT_APP_API_URL}/api/recipes/${id}`, formDataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`
