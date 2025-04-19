@@ -80,7 +80,7 @@ router.post('/', [auth, multer.single('image')], async (req, res) => {
             ingredients: parsedIngredients,
             instructions: parsedInstructions,
             image: req.file ? req.file.filename : 'default.jpg',
-            createdBy: req.user._id
+            createdBy: req.user.id
         });
 
         const recipe = await newRecipe.save();
@@ -90,7 +90,7 @@ router.post('/', [auth, multer.single('image')], async (req, res) => {
         if (err.name === 'ValidationError') {
             return res.status(400).json({ message: err.message });
         }
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Error creating recipe' });
     }
 });
 

@@ -55,6 +55,11 @@ router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
 
+        // Validate input
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Please provide both email and password' });
+        }
+
         // Check if user exists
         const user = await User.findOne({ email });
         if (!user) {
@@ -84,7 +89,7 @@ router.post('/login', async (req, res) => {
         });
     } catch (error) {
         console.error('Login error:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Server error during login' });
     }
 });
 
