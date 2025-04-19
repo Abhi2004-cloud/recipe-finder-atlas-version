@@ -8,15 +8,10 @@ const app = express();
 
 // Middleware
 app.use(cors({
-    origin: [
-        'http://localhost:3000',
-        'https://recipe-finder-vibe-replica.vercel.app',
-        'https://recipe-finder-atlas-version-client.vercel.app',
-        'https://recipe-finder-atlas-version-client-2nkrifkjr.vercel.app'
-    ],
+    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token']
 }));
 
 // Handle preflight requests
