@@ -106,7 +106,7 @@ router.put('/:id', [auth, multer.single('image')], async (req, res) => {
         }
 
         // Check if user owns recipe
-        if (recipe.createdBy.toString() !== req.user._id.toString()) {
+        if (recipe.createdBy.toString() !== req.user.id.toString()) {
             return res.status(401).json({ message: 'User not authorized' });
         }
 
@@ -144,18 +144,26 @@ router.put('/:id', [auth, multer.single('image')], async (req, res) => {
             }
         }
 
-        // Update recipe
-        recipe.title = title || recipe.title;
-        recipe.description = description || recipe.description;
-        recipe.cuisine = cuisine || recipe.cuisine;
-        recipe.prepTime = prepTime ? parseInt(prepTime) : recipe.prepTime;
-        recipe.cookTime = cookTime ? parseInt(cookTime) : recipe.cookTime;
-        recipe.servings = servings ? parseInt(servings) : recipe.servings;
-        recipe.ingredients = parsedIngredients;
-        recipe.instructions = parsedInstructions;
-        recipe.image = req.file ? req.file.filename : recipe.image;
+        // Update recipe fields
+        const updateFields = {
+            title: title || recipe.title,
+            description: description || recipe.description,
+            cuisine: cuisine || recipe.cuisine,
+            prepTime: prepTime ? parseInt(prepTime) : recipe.prepTime,
+            cookTime: cookTime ? parseInt(cookTime) : recipe.cookTime,
+            servings: servings ? parseInt(servings) : recipe.servings,
+            ingredients: parsedIngredients,
+            instructions: parsedInstructions,
+            image: req.file ? req.file.filename : recipe.image
+        };
 
-        await recipe.save();
+        // Update recipe
+        recipe = await Recipe.findByIdAndUpdate(
+            req.params.id,
+            { $set: updateFields },
+            { new: true, runValidators: true }
+        );
+
         res.json(recipe);
     } catch (err) {
         console.error('Error updating recipe:', err);
@@ -165,7 +173,7 @@ router.put('/:id', [auth, multer.single('image')], async (req, res) => {
         if (err.name === 'ValidationError') {
             return res.status(400).json({ message: err.message });
         }
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Error updating recipe' });
     }
 });
 
@@ -178,7 +186,7 @@ router.delete('/:id', auth, async (req, res) => {
         }
 
         // Check if user owns recipe
-        if (recipe.createdBy.toString() !== req.user._id.toString()) {
+        if (recipe.createdBy.toString() !== req.user.id.toString()) {
             return res.status(401).json({ message: 'User not authorized' });
         }
 
@@ -190,14 +198,16 @@ router.delete('/:id', auth, async (req, res) => {
             }
         }
 
-        await recipe.deleteOne();
-        res.json({ message: 'Recipe removed' });
+        // Delete recipe
+        await Recipe.findByIdAndDelete(req.params.id);
+        
+        res.json({ message: 'Recipe deleted successfully' });
     } catch (err) {
         console.error('Error deleting recipe:', err);
         if (err.kind === 'ObjectId') {
             return res.status(404).json({ message: 'Recipe not found' });
         }
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Error deleting recipe' });
     }
 });
 
