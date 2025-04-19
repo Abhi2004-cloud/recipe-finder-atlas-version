@@ -7,22 +7,20 @@ const RecipeList = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    useEffect(() => {
-        fetchRecipes();
-    }, []);
-
     const fetchRecipes = async () => {
         try {
+            console.log('Fetching recipes from:', `${config.API_URL}/api/recipes`);
             const response = await fetch(`${config.API_URL}/api/recipes`, {
                 ...config.fetchOptions,
                 headers: config.headers
             });
 
             if (!response.ok) {
-                throw new Error('Failed to fetch recipes');
+                throw new Error(`Failed to fetch recipes: ${response.status}`);
             }
 
             const data = await response.json();
+            console.log('Fetched recipes:', data);
             setRecipes(data);
             setError(null);
         } catch (err) {
@@ -33,28 +31,36 @@ const RecipeList = () => {
         }
     };
 
+    useEffect(() => {
+        fetchRecipes();
+    }, []);
+
     if (loading) return <div>Loading...</div>;
     if (error) return <div>Error: {error}</div>;
 
     return (
         <div className="recipe-list">
             <h2>All Recipes</h2>
-            <div className="recipes-grid">
-                {recipes.map(recipe => (
-                    <div key={recipe._id} className="recipe-card">
-                        <img 
-                            src={`${config.UPLOADS_URL}/${recipe.image}`} 
-                            alt={recipe.title}
-                            onError={(e) => {
-                                e.target.src = '/default-recipe.jpg';
-                            }}
-                        />
-                        <h3>{recipe.title}</h3>
-                        <p>{recipe.description}</p>
-                        <Link to={`/recipes/${recipe._id}`}>View Recipe</Link>
-                    </div>
-                ))}
-            </div>
+            {recipes.length === 0 ? (
+                <p>No recipes found. Create your first recipe!</p>
+            ) : (
+                <div className="recipes-grid">
+                    {recipes.map(recipe => (
+                        <div key={recipe._id} className="recipe-card">
+                            <img 
+                                src={`${config.UPLOADS_URL}/${recipe.image}`} 
+                                alt={recipe.title}
+                                onError={(e) => {
+                                    e.target.src = '/default-recipe.jpg';
+                                }}
+                            />
+                            <h3>{recipe.title}</h3>
+                            <p>{recipe.description}</p>
+                            <Link to={`/recipes/${recipe._id}`}>View Recipe</Link>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };
